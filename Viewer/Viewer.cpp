@@ -1,10 +1,12 @@
 #include "polyscope/polyscope.h"
+#include "polyscope/point_cloud.h"
 #include "ExteriorPoissonRecon/ExteriorPoisson.h"
 
 #include "Misha/Miscellany.h"
 #include "Misha/CmdLineParser.h"
 #include "Misha/Geometry.h"
 #include "Misha/Ply.h"
+#include "Include/Hat.h"
 #include "Misha/PlyVertexData.h"
 
 
@@ -40,9 +42,18 @@ std::vector< std::pair< Point< double , Dim > , Hat::SkewSymmetricMatrix< double
 int main( int argc , char* argv[] )
 {
 
+    auto wf = Hat::WedgeFunctions<Dim>(1);
 
     std::vector< std::pair< Point< double , Dim > , Hat::SkewSymmetricMatrix< double , Dim > > > slist;
     slist = ReadSamples<Dim>(argv[1]);
+
+    std::vector<Eigen::VectorXd> duals;
+    std::vector< Point<double,Dim>> points;
+    for (int i=0; i<slist.size(); i++){
+            points.push_back(slist[i].first);
+            Eigen::VectorXd dual = wf.dualVector(&slist[i].second);
+            duals.push_back(Eigen::Vector3d(dual(2), dual(0), dual(1)));
+    }
 
     // -----------------------------
     // --------- POLYSCOPE ---------
@@ -52,6 +63,9 @@ int main( int argc , char* argv[] )
     polyscope::view::upDir = polyscope::UpDir::ZUp;
     polyscope::options::groundPlaneMode = polyscope::GroundPlaneMode::None;
     polyscope::options::shadowBlurIters = 6;
+
+    auto pc = polyscope::registerPointCloud("Input points", points);
+    pc->addVectorQuantity("Duals", duals);
 
     // update_visualization(P, T, EC, TF, level_vis[level], normalize_vectors, true);
     // polyscope::state::userCallback = myCallback;
