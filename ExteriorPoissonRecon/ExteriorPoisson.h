@@ -44,6 +44,10 @@ namespace ExteriorPoisson
 	// Note that the functions here take values in the unit cube whereas regular grids take values in the range defined by the resolution
 	static const unsigned int CoDim = 2;
 
+
+    template< unsigned int Dim >
+    std::vector< std::pair< Point< double , Dim > , Hat::SkewSymmetricMatrix< double , Dim > > > ReadSamples( std::string fileName );
+
 	// Computes the transformation mapping the point set into the unit cube
 	template< unsigned int Dim , typename SampleFunctor /* = std::function< Point< double , Dim > > ( unsigned int idx ) */ >
 	SquareMatrix< double , Dim+1 > ToUnitCube( SampleFunctor F , size_t sampleNum , double scale );
