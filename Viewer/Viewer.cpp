@@ -42,17 +42,19 @@ std::vector< std::pair< Point< double , Dim > , Hat::SkewSymmetricMatrix< double
 int main( int argc , char* argv[] )
 {
 
-    auto wf = Hat::WedgeFunctions<Dim>(1);
-
     std::vector< std::pair< Point< double , Dim > , Hat::SkewSymmetricMatrix< double , Dim > > > slist;
     slist = ReadSamples<Dim>(argv[1]);
 
-    std::vector<Eigen::VectorXd> duals;
+    std::vector<Eigen::VectorXd> tangents;
     std::vector< Point<double,Dim>> points;
+    // std::vector<Hat::SkewSymmetricMatrix<double,Dim>> wedges;
     for (int i=0; i<slist.size(); i++){
             points.push_back(slist[i].first);
-            Eigen::VectorXd dual = wf.dualVector(&slist[i].second);
-            duals.push_back(Eigen::Vector3d(dual(2), dual(0), dual(1)));
+            // wedges.push_back(slist[i].second);
+            auto dual = slist[i].second;
+            
+            // conversion from wedge to cross product included 
+            tangents.push_back(Eigen::Vector3d(dual[2], -dual[1], dual[0]));
     }
 
     // -----------------------------
@@ -65,7 +67,7 @@ int main( int argc , char* argv[] )
     polyscope::options::shadowBlurIters = 6;
 
     auto pc = polyscope::registerPointCloud("Input points", points);
-    pc->addVectorQuantity("Duals", duals);
+    pc->addVectorQuantity("Tangents", tangents);
 
     // update_visualization(P, T, EC, TF, level_vis[level], normalize_vectors, true);
     // polyscope::state::userCallback = myCallback;
