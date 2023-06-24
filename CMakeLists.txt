@@ -26,10 +26,6 @@ FetchContent_MakeAvailable(libigl)
 set(LIBIGL_GLFW   OFF CACHE BOOL "Build libigl with GLFW")
 set(LIBIGL_IMGUI  OFF CACHE BOOL "Build libigl with ImGui")
 set(LIBIGL_OPENGL OFF CACHE BOOL "Build libigl with OpenGL")
-# add_subdirectory("./libigl")
-# add_subdirectory("./polyscope")
-
-find_package(OpenMP REQUIRED)
 
 # Add your project files
 include_directories("." "./PoissonCurveRecon/" "./Misha/" "./Include/")
@@ -38,4 +34,4 @@ file(GLOB HEADERS  ./Misha/*.h ./Include/*.h ./ExteriorPoissonRecon/*.h)
 file(GLOB INLINE_HEADERS  ./Misha/*.inl ./Include/*.inl)
 
 add_executable(${PROJECT_NAME} ./Viewer/Viewer.cpp ${SOURCEFILES} ${HEADERS} ${INLINE_HEADERS})
-target_link_libraries(${PROJECT_NAME} igl::core polyscope OpenMP::OpenMP_CXX)
+target_link_libraries(${PROJECT_NAME} igl::core polyscope)
