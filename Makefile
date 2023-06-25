@@ -9,8 +9,8 @@ DILATE_SOURCE=Dilate/Dilate.cpp
 EXTRACT_TARGET=Extract
 EXTRACT_SOURCE=Extract/Extract.cpp
 
-COMPILER ?= gcc
-#COMPILER ?= clang
+#COMPILER ?= gcc
+COMPILER ?= clang
 
 ifeq ($(COMPILER),gcc)
 	CFLAGS += -fopenmp -Wno-deprecated -std=c++17 -Wno-invalid-offsetof -Wno-attribute-warning

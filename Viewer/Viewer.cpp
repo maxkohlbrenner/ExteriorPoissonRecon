@@ -59,16 +59,17 @@ int main( int argc , char* argv[] )
     slist = ReadSamples<Dim>(argv[1]);
 
     std::vector<Eigen::VectorXd> tangents;
-    std::vector< Point<double,Dim>> points;
+    // std::vector< Point<double,Dim>> points;
+    Eigen::MatrixXd Points;
 
     int n=30;
     double s = 0.05;
 
     std::vector<Eigen::MatrixXd> disks;
-    // std::vector<Hat::SkewSymmetricMatrix<double,Dim>> wedges;
+    Points.resize(slist.size(),3);
     for (int i=0; i<slist.size(); i++){
-            points.push_back(slist[i].first);
-            // wedges.push_back(slist[i].second);
+            // points.push_back(slist[i].first);
+            Points.row(i) = Eigen::RowVector3d(slist[i].first[0], slist[i].first[1], slist[i].first[2]);
             auto dual = slist[i].second;
             
             // conversion from wedge to cross product included 
@@ -94,6 +95,48 @@ int main( int argc , char* argv[] )
     for (int d=0; d<disks.size(); d++) {
         face_colors.row(d) = (tangents[d].normalized()/2. + Eigen::Vector3d(0.5, 0.5, 0.5));
     }
+    
+    // exterior product grid vis
+    Eigen::RowVector3d corner = Points.colwise().minCoeff();
+    double len = (Points.colwise().maxCoeff() - corner).maxCoeff();
+
+    corner = Points.colwise().mean() - 0.5/sqrt(2)*len*Eigen::RowVector3d(1.,1.,1.);
+
+    int r = 15;
+    double sigma = 0.1;
+    double size = 1e-4;
+    Eigen::MatrixXd GridCenters(r*r*r,3);
+    std::vector<Eigen::MatrixXd> gdisks;
+    for (int i=0; i<r; i++) {
+        for (int j=0; j<r; j++) {
+            for (int k=0; k<r; k++) {
+                Eigen::RowVector3d c = Eigen::Vector3d(1./r * (int)i, 1./r * (int)j, 1./r * (int)k);
+                c = corner + c*len;
+                GridCenters.row(i*r*r+j*r+k) = c;
+                
+                Hat::SkewSymmetricMatrix<double, Dim> s;
+                for (int pi=0; pi<slist.size(); pi++) {
+                    double weight = exp(- (c - Points.row(pi)).squaredNorm() / sigma);
+                    s += weight * slist[pi].second;
+                }
+                Eigen::Vector3d tangent = Eigen::Vector3d(s[2], -s[1], s[0]);
+                Eigen::MatrixXd C;
+                std::cout << "tangent.norm: " << tangent.norm() << std::endl;
+                oriented_circle(c.transpose(), tangent, tangent.norm()*size, n, C);
+                gdisks.push_back(C);
+            }
+        }
+    }
+
+    // unite all grid disks
+    Eigen::MatrixXd Vgd(gdisks.size()*n, 3);
+    Eigen::MatrixXi Fgd(gdisks.size(), n);
+    for (int d=0; d<gdisks.size(); d++) {
+        Vgd.block(d*n,0,n,3) = gdisks[d]; 
+        for (int t=0; t<n;t++){
+            Fgd(d,t) = d*n+t;
+        }
+    }
 
     // -----------------------------
     // --------- POLYSCOPE ---------
@@ -104,11 +147,14 @@ int main( int argc , char* argv[] )
     polyscope::options::groundPlaneMode = polyscope::GroundPlaneMode::None;
     polyscope::options::shadowBlurIters = 6;
 
-    auto pc = polyscope::registerPointCloud("Input points", points);
+    // auto grid = polyscope::registerPointCloud("Grid", GridCenters);
+    auto gd = polyscope::registerSurfaceMesh("GridDisks", Vgd, Fgd);
+
+    auto pc = polyscope::registerPointCloud("Input points", Points);
     pc->addVectorQuantity("Tangents", tangents);
 
     auto ds = polyscope::registerSurfaceMesh("Disks", VD, FD);
-    ds->addFaceColorQuantity("Orientation", face_colors)->setEnabled(true);
+    ds->addFaceColorQuantity("Orientation", face_colors)->setEnabled(false);
 
     // update_visualization(P, T, EC, TF, level_vis[level], normalize_vectors, true);
     // polyscope::state::userCallback = myCallback;
