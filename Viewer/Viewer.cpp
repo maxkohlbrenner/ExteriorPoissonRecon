@@ -98,9 +98,9 @@ int main( int argc , char* argv[] )
     
     // exterior product grid vis
     Eigen::RowVector3d corner = Points.colwise().minCoeff();
-    double len = (Points.colwise().maxCoeff() - corner).maxCoeff();
+    double len = (Points.colwise().maxCoeff() - corner).maxCoeff() * 1.2;
 
-    corner = Points.colwise().mean() - 0.5/sqrt(2)*len*Eigen::RowVector3d(1.,1.,1.);
+    corner = Points.colwise().mean() - 0.5*len*Eigen::RowVector3d(1.,1.,1.); // / sqrt(2);
 
     int r = 15;
     double sigma = 0.1;
@@ -110,8 +110,8 @@ int main( int argc , char* argv[] )
     for (int i=0; i<r; i++) {
         for (int j=0; j<r; j++) {
             for (int k=0; k<r; k++) {
-                Eigen::RowVector3d c = Eigen::Vector3d(1./r * (int)i, 1./r * (int)j, 1./r * (int)k);
-                c = corner + c*len;
+                Eigen::RowVector3d c = Eigen::Vector3d(1./(r-1) * (int)i, 1./(r-1) * (int)j, 1./(r-1) * (int)k);
+                c = corner + c*len;// *sqrt(2);
                 GridCenters.row(i*r*r+j*r+k) = c;
                 
                 Hat::SkewSymmetricMatrix<double, Dim> s;
