@@ -30,6 +30,7 @@ DAMAGE.
 #define HAT_INCLUDED
 
 #include <unordered_map>
+#include <omp.h>
 #include <functional>
 #include <Eigen/Sparse>
 #include <Misha/Array.h>
